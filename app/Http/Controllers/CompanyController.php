@@ -24,25 +24,19 @@ class CompanyController extends Controller
     {
         $query = CompanyProfile::query();
 
-        // Filter by name/industry
+        // Filter by name/description
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
-                $q->where('company_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('industry', 'like', '%' . $keyword . '%')
+                $q->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('description', 'like', '%' . $keyword . '%');
             });
         }
 
-        // Filter by industry
-        if ($request->filled('industry')) {
-            $query->where('industry', $request->industry);
-        }
-
         $companies = $query->paginate(12)->withQueryString();
 
-        // Get list of unique industries for filter
-        $industries = CompanyProfile::distinct()->pluck('industry')->filter()->sort();
+        // Pass an empty collection if the view expects it
+        $industries = collect();
 
         return view('companies.index', compact('companies', 'industries'));
     }
@@ -52,11 +46,8 @@ class CompanyController extends Controller
      */
     public function show(CompanyProfile $company)
     {
-        // Get active jobs for this company
-        $jobs = Job::where('company_profile_id', $company->id)
-            ->where('status', 'active')
-            ->latest()
-            ->get();
+        // Get active jobs for this company (using the relationship defined in the model)
+        $jobs = $company->jobs()->where('is_active', true)->latest()->get();
 
         return view('companies.show', compact('company', 'jobs'));
     }
@@ -80,30 +71,25 @@ class CompanyController extends Controller
      */
     public function update(Request $request)
     {
+        $company = CompanyProfile::where('user_id', Auth::id())->firstOrFail();
+
         $request->validate([
-            'company_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'website' => 'nullable|url',
-            'industry' => 'required|string|max:100',
             'description' => 'required|string',
-            'address' => 'required|string',
+            'location' => 'required|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $company = CompanyProfile::where('user_id', Auth::id())->first();
+        $company->update($request->except('logo'));
 
-        if ($company) {
-            $company->update($request->except('logo'));
-
-            if ($request->hasFile('logo')) {
-                $path = $request->file('logo')->store('company_logos', 'public');
-                $company->logo = $path;
-                $company->save();
-            }
-
-            return redirect()->route('companies.show', $company)->with('success', 'Company profile updated successfully');
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('company_logos', 'public');
+            $company->logo = $path;
+            $company->save();
         }
 
-        return back()->with('error', 'Company profile not found');
+        return redirect()->route('companies.show', $company)->with('success', 'Company profile updated successfully');
     }
 
     /**
@@ -124,11 +110,10 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'company_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'website' => 'nullable|url',
-            'industry' => 'required|string|max:100',
             'description' => 'required|string',
-            'address' => 'required|string',
+            'location' => 'required|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 

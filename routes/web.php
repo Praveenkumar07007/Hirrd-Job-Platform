@@ -63,8 +63,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    // Employer routes
-    Route::prefix('employer')->name('employer.')->group(function () {
+    // Employer routes - Apply middleware before grouping
+    Route::middleware(['employer'])->prefix('employer')->name('employer.')->group(function () {
         Route::get('/dashboard', [EmployerDashboardController::class, 'index'])->name('dashboard');
 
         // Employer job management

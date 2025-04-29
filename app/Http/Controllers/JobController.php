@@ -25,7 +25,7 @@ class JobController extends Controller
     public function index(Request $request)
     {
         $query = Job::with(['companyProfile', 'category'])
-            ->where('status', 'active');
+            ->where('is_active', true); // Changed status to is_active
 
         // Filter by keyword (title, description, company)
         if ($request->filled('keyword')) {
@@ -76,7 +76,8 @@ class JobController extends Controller
     public function show(Job $job)
     {
         // Check if job is active
-        if ($job->status != 'active' && !(Auth::check() && Auth::id() == $job->companyProfile->user_id)) {
+        // Use boolean check for is_active
+        if (!$job->is_active && !(Auth::check() && Auth::id() == $job->companyProfile->user_id)) {
             abort(404);
         }
 
@@ -91,7 +92,7 @@ class JobController extends Controller
         }
 
         // Get related jobs
-        $relatedJobs = Job::where('status', 'active')
+        $relatedJobs = Job::where('is_active', true) // Changed status to is_active
             ->where('id', '!=', $job->id)
             ->where(function ($query) use ($job) {
                 $query->where('category_id', $job->category_id)
@@ -114,7 +115,7 @@ class JobController extends Controller
         }
 
         // Check if job is still active
-        if ($job->status != 'active') {
+        if (!$job->is_active) { // Changed status to is_active
             return redirect()->back()->with('error', 'This job is no longer accepting applications');
         }
 

@@ -1,180 +1,267 @@
 @extends('layouts.app')
 
-@section('title', 'Find Jobs')
-
 @section('content')
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="h2">Find Your Next Career Opportunity</h1>
-            <p class="text-muted">Browse through our latest job openings</p>
-        </div>
-        <div class="col-md-4 text-md-end">
-            <a href="{{ route('home') }}" class="btn btn-link">
-                <i class="bi bi-arrow-left me-1"></i> Back to Home
-            </a>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Search Filters Sidebar -->
-        <div class="col-lg-4 mb-4 mb-lg-0">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <h5 class="card-title mb-3">Search & Filters</h5>
-                    <form action="{{ route('jobs.index') }}" method="GET">
-                        <div class="mb-3">
-                            <label for="keyword" class="form-label">Keywords</label>
-                            <input type="text" class="form-control" id="keyword" name="keyword"
-                                placeholder="Job title, skills, or company" value="{{ request('keyword') }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="location" name="location"
-                                placeholder="City, state, or remote" value="{{ request('location') }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="category" class="form-label">Category</label>
-                            <select class="form-select" id="category" name="category">
-                                <option value="">All Categories</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}"
-                                        {{ request('category') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="type" class="form-label">Job Type</label>
-                            <select class="form-select" id="type" name="type">
-                                <option value="">All Types</option>
-                                @foreach($jobTypes as $type)
-                                    <option value="{{ $type }}" {{ request('type') == $type ? 'selected' : '' }}>
-                                        {{ ucfirst($type) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-search me-1"></i> Search Jobs
-                            </button>
-                            <a href="{{ route('jobs.index') }}" class="btn btn-outline-secondary">Reset Filters</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Job Listings -->
-        <div class="col-lg-8">
-            <!-- Results Summary -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <p class="mb-0">
-                    Showing <strong>{{ $jobs->firstItem() ?? 0 }}</strong> -
-                    <strong>{{ $jobs->lastItem() ?? 0 }}</strong> of
-                    <strong>{{ $jobs->total() }}</strong> jobs
-                </p>
+<div class="bg-light">
+    <div class="container py-5">
+        <div class="row">
+            <!-- Page Header -->
+            <div class="mb-4 col-12">
+                <h1 class="display-5 fw-bold">Find Your Perfect Job</h1>
+                <p class="lead text-muted">Browse thousands of job openings from top companies</p>
             </div>
 
-            <!-- No Results Message -->
-            @if($jobs->isEmpty())
-                <div class="card shadow-sm">
-                    <div class="card-body p-5 text-center">
-                        <div class="mb-3">
-                            <i class="bi bi-search fs-1 text-muted"></i>
-                        </div>
-                        <h4>No Jobs Found</h4>
-                        <p class="text-muted mb-4">
-                            We couldn't find any jobs matching your search criteria.
-                            Try adjusting your filters or search terms.
-                        </p>
-                        <a href="{{ route('jobs.index') }}" class="btn btn-outline-primary">
-                            Clear Filters
-                        </a>
+            <!-- Search and Filter Section -->
+            <div class="mb-4 col-12">
+                <div class="border-0 shadow-sm card">
+                    <div class="p-4 card-body">
+                        <form action="{{ route('jobs.index') }}" method="GET">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="search" class="form-label">Keyword</label>
+                                    <div class="input-group">
+                                        <span class="bg-white input-group-text"><i class="bi bi-search"></i></span>
+                                        <input type="text" class="form-control" id="search" name="search" placeholder="Job title, company or keywords" value="{{ request('search') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" id="category" name="category">
+                                        <option value="">All Categories</option>
+                                        @foreach($categories ?? [] as $category)
+                                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    <div class="input-group">
+                                        <span class="bg-white input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                        <input type="text" class="form-control" id="location" name="location" placeholder="City or remote" value="{{ request('location') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        Search Jobs
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
-            @endif
+            </div>
+
+            <!-- Sidebar Filters -->
+            <div class="mb-4 col-lg-3">
+                <div class="mb-4 border-0 shadow-sm card">
+                    <div class="card-body">
+                        <h5 class="card-title">Filter By</h5>
+                        <hr>
+
+                        <h6 class="mb-2">Job Type</h6>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="fullTime" name="job_type[]" value="Full-time">
+                                <label class="form-check-label" for="fullTime">Full-time</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="partTime" name="job_type[]" value="Part-time">
+                                <label class="form-check-label" for="partTime">Part-time</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="contract" name="job_type[]" value="Contract">
+                                <label class="form-check-label" for="contract">Contract</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remote" name="job_type[]" value="Remote">
+                                <label class="form-check-label" for="remote">Remote</label>
+                            </div>
+                        </div>
+
+                        <h6 class="mb-2">Experience Level</h6>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="entry" name="experience_level[]" value="Entry Level">
+                                <label class="form-check-label" for="entry">Entry Level</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mid" name="experience_level[]" value="Mid Level">
+                                <label class="form-check-label" for="mid">Mid Level</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="senior" name="experience_level[]" value="Senior Level">
+                                <label class="form-check-label" for="senior">Senior Level</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="executive" name="experience_level[]" value="Executive">
+                                <label class="form-check-label" for="executive">Executive</label>
+                            </div>
+                        </div>
+
+                        <h6 class="mb-2">Salary Range</h6>
+                        <div class="mb-3">
+                            <input type="range" class="form-range" id="salaryRange" min="0" max="200000" step="10000">
+                            <div class="d-flex justify-content-between">
+                                <span class="small">$0</span>
+                                <span class="small">$200k+</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="mt-3 btn btn-outline-primary w-100">Apply Filters</button>
+                    </div>
+                </div>
+
+                <div class="border-0 shadow-sm card">
+                    <div class="card-body">
+                        <h5 class="card-title">Popular Categories</h5>
+                        <hr>
+                        <div class="d-flex flex-column">
+                            <a href="#" class="mb-2 text-decoration-none">Technology</a>
+                            <a href="#" class="mb-2 text-decoration-none">Marketing</a>
+                            <a href="#" class="mb-2 text-decoration-none">Finance</a>
+                            <a href="#" class="mb-2 text-decoration-none">Healthcare</a>
+                            <a href="#" class="text-decoration-none">Education</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Job Listings -->
-            <div class="job-listings">
-                @foreach($jobs as $job)
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body p-4">
-                            <div class="row">
-                                <div class="col-md-9">
-                                    <div class="d-flex">
-                                        <div class="flex-shrink-0 me-3">
-                                            @if($job->companyProfile->logo)
-                                                <img src="{{ asset('storage/' . $job->companyProfile->logo) }}"
-                                                     alt="{{ $job->companyProfile->company_name }}" class="rounded" width="60">
-                                            @else
-                                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                                     style="width: 60px; height: 60px;">
-                                                    <span class="h4 mb-0 text-secondary">
-                                                        {{ substr($job->companyProfile->company_name, 0, 1) }}
-                                                    </span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <h5 class="card-title mb-1">
-                                                <a href="{{ route('jobs.show', $job) }}" class="text-decoration-none text-dark">
-                                                    {{ $job->title }}
-                                                </a>
-                                            </h5>
-                                            <p class="mb-2">
-                                                <a href="{{ route('companies.show', $job->companyProfile->id) }}"
-                                                   class="text-decoration-none text-muted">
-                                                    {{ $job->companyProfile->company_name }}
-                                                </a>
-                                            </p>
-                                            <div class="d-flex flex-wrap">
-                                                <span class="badge bg-light text-dark me-2 mb-1">
-                                                    <i class="bi bi-geo-alt"></i> {{ $job->location }}
-                                                </span>
-                                                <span class="badge bg-light text-dark me-2 mb-1">
-                                                    <i class="bi bi-clock"></i> {{ ucfirst($job->type) }}
-                                                </span>
-                                                @if($job->salary_range)
-                                                    <span class="badge bg-light text-dark me-2 mb-1">
-                                                        <i class="bi bi-cash"></i> {{ $job->salary_range }}
-                                                    </span>
-                                                @endif
-                                                <span class="badge bg-primary mb-1">{{ $job->category->name }}</span>
-                                            </div>
-                                        </div>
+            <div class="col-lg-9">
+                @forelse($jobs ?? [] as $job)
+                    <div class="mb-4 border-0 shadow-sm card hover-lift">
+                        <div class="p-4 card-body">
+                            <div class="row align-items-center">
+                                <div class="mb-3 text-center col-md-2 mb-md-0">
+                                    <div class="p-3 rounded bg-light d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                                        <img src="{{ $job->company->logo ?? 'https://via.placeholder.com/70' }}" alt="{{ $job->company->name ?? 'Company' }}" class="img-fluid" style="max-width: 50px; max-height: 50px;">
                                     </div>
-                                    <p class="card-text text-muted small mt-3">
-                                        {{ Str::limit($job->description, 150) }}
-                                    </p>
                                 </div>
-                                <div class="col-md-3 mt-3 mt-md-0 d-flex flex-column justify-content-between">
-                                    <div class="text-md-end">
-                                        <small class="text-muted">Posted {{ $job->created_at->diffForHumans() }}</small>
+
+                                <div class="mb-3 col-md-7 mb-md-0">
+                                    <h5 class="mb-1 card-title">{{ $job->title ?? 'Software Engineer' }}</h5>
+                                    <p class="mb-2 text-muted">{{ $job->company->name ?? 'Tech Company' }}</p>
+                                    <div class="flex-wrap gap-2 d-flex small">
+                                        <span class="badge bg-light text-dark">{{ $job->location ?? 'San Francisco, CA' }}</span>
+                                        <span class="badge bg-light text-dark">{{ $job->job_type ?? 'Full-time' }}</span>
+                                        <span class="badge bg-light text-dark">${{ $job->salary_min ?? '80k' }} - ${{ $job->salary_max ?? '120k' }}</span>
                                     </div>
-                                    <div class="mt-auto text-md-end">
-                                        <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-primary">
-                                            View Details
-                                        </a>
+                                </div>
+
+                                <div class="col-md-3 text-md-end">
+                                    <a href="{{ route('jobs.show', $job->id ?? 1) }}" class="btn btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 row">
+                                <div class="col-12">
+                                    <p class="mb-0 card-text text-truncate">{{ $job->description ?? 'This position requires expertise in modern web frameworks and development practices.' }}</p>
+                                    <div class="mt-2 small text-muted">Posted {{ $job->created_at ? $job->created_at->diffForHumans() : '2 days ago' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="border-0 shadow-sm card">
+                        <div class="p-5 text-center card-body">
+                            <div class="mb-4">
+                                <i class="bi bi-search" style="font-size: 3rem;"></i>
+                            </div>
+                            <h3>No Jobs Found</h3>
+                            <p class="mb-4 text-muted">We couldn't find any jobs matching your criteria. Try adjusting your search filters or check back later.</p>
+
+                            <!-- Sample Jobs (Static Data) -->
+                            <h4 class="mt-5 mb-4">Sample Job Listings</h4>
+                            <div class="row g-4">
+                                <!-- Sample Job 1 -->
+                                <div class="col-md-6">
+                                    <div class="border-0 shadow-sm card h-100">
+                                        <div class="p-4 card-body">
+                                            <div class="mb-3 d-flex align-items-center">
+                                                <div class="p-2 rounded bg-light me-3">
+                                                    <img src="https://via.placeholder.com/40" alt="Company" class="img-fluid" style="width: 40px; height: 40px;">
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-0 card-title">Software Developer</h5>
+                                                    <p class="mb-0 text-muted small">TechCorp Inc.</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex-wrap gap-2 mb-3 d-flex small">
+                                                <span class="badge bg-light text-dark">San Francisco, CA</span>
+                                                <span class="badge bg-light text-dark">Full-time</span>
+                                                <span class="badge bg-light text-dark">$80k - $120k</span>
+                                            </div>
+                                            <p class="card-text small">Developing and maintaining web applications using modern frameworks and best practices.</p>
+                                            <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sample Job 2 -->
+                                <div class="col-md-6">
+                                    <div class="border-0 shadow-sm card h-100">
+                                        <div class="p-4 card-body">
+                                            <div class="mb-3 d-flex align-items-center">
+                                                <div class="p-2 rounded bg-light me-3">
+                                                    <img src="https://via.placeholder.com/40" alt="Company" class="img-fluid" style="width: 40px; height: 40px;">
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-0 card-title">Marketing Specialist</h5>
+                                                    <p class="mb-0 text-muted small">Growth Media Ltd.</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex-wrap gap-2 mb-3 d-flex small">
+                                                <span class="badge bg-light text-dark">Remote</span>
+                                                <span class="badge bg-light text-dark">Full-time</span>
+                                                <span class="badge bg-light text-dark">$70k - $90k</span>
+                                            </div>
+                                            <p class="card-text small">Creating and implementing marketing campaigns for our clients across multiple digital platforms.</p>
+                                            <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                @endforeach
-            </div>
+                @endforelse
 
-            <!-- Pagination -->
-            <div class="d-flex justify-content-center mt-4">
-                {{ $jobs->withQueryString()->links() }}
+                <!-- Pagination -->
+                <div class="mt-4 d-flex justify-content-center">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+</style>
 @endsection

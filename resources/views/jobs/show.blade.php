@@ -1,160 +1,224 @@
-<?php
 @extends('layouts.app')
 
-@section('title', $job->title)
+@section('title', $job->title . ' - ' . $job->companyProfile->company_name)
 
 @section('content')
-<div class="row">
-    <div class="col-md-8">
-        <div class="mb-4 card">
-            <div class="card-body">
-                <h1 class="mb-4 card-title">{{ $job->title }}</h1>
-                <div class="flex-wrap gap-2 mb-4 d-flex">
-                    <span class="badge bg-info">{{ $job->type }}</span>
-                    <span class="badge bg-secondary">{{ $job->location }}</span>
-                    <span class="badge bg-success">{{ $job->category->name }}</span>
-                    @if($job->salary)
-                        <span class="badge bg-warning text-dark">${{ number_format($job->salary) }}</span>
-                    @endif
-                </div>
+<div class="container">
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
 
-                <div class="mb-4">
-                    <h5>Job Description</h5>
-                    <div class="job-description">
-                        {{ $job->description }}
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('jobs.index') }}">Jobs</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ $job->title }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ route('jobs.index') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Jobs
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Job Details -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="flex-shrink-0 me-3">
+                            @if($job->companyProfile->logo)
+                                <img src="{{ asset('storage/' . $job->companyProfile->logo) }}" alt="{{ $job->companyProfile->company_name }}" class="rounded" width="80">
+                            @else
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                    <span class="h3 mb-0 text-secondary">{{ substr($job->companyProfile->company_name, 0, 1) }}</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div>
+                            <h1 class="h2 mb-1">{{ $job->title }}</h1>
+                            <p class="text-muted mb-0">
+                                <a href="{{ route('companies.show', $job->companyProfile->id) }}" class="text-decoration-none text-muted">
+                                    {{ $job->companyProfile->company_name }} · {{ $job->location }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap mb-4">
+                        <span class="badge bg-light text-dark me-2 mb-2">
+                            <i class="bi bi-geo-alt me-1"></i> {{ $job->location }}
+                        </span>
+                        <span class="badge bg-light text-dark me-2 mb-2">
+                            <i class="bi bi-clock me-1"></i> {{ ucfirst($job->type) }}
+                        </span>
+                        @if($job->salary_range)
+                            <span class="badge bg-light text-dark me-2 mb-2">
+                                <i class="bi bi-cash me-1"></i> {{ $job->salary_range }}
+                            </span>
+                        @endif
+                        <span class="badge bg-primary me-2 mb-2">{{ $job->category->name }}</span>
+                    </div>
+
+                    <div class="job-description mb-5">
+                        <h4>Job Description</h4>
+                        <div class="mb-4">
+                            {!! nl2br(e($job->description)) !!}
+                        </div>
+
+                        <h4>Requirements</h4>
+                        <div class="mb-4">
+                            {!! nl2br(e($job->requirements)) !!}
+                        </div>
                     </div>
                 </div>
-
-                @if($job->deadline)
-                <div class="alert alert-warning">
-                    <strong>Application Deadline:</strong> {{ \Carbon\Carbon::parse($job->deadline)->format('F d, Y') }}
-                </div>
-                @endif
-
-                <div class="mt-4">
-                    @guest
-                        <div class="alert alert-info">
-                            <a href="{{ route('login') }}">Login</a> or <a href="{{ route('register') }}">Register</a> to apply for this job.
+                <div class="card-footer bg-white p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <small class="text-muted">Posted {{ $job->created_at->diffForHumans() }}</small>
                         </div>
-                    @else
-                        @if(Auth::user()->user_type == 'job_seeker')
-                            @if($hasApplied)
-                                <div class="alert alert-success">
-                                    You have already applied for this job.
-                                    <a href="{{ url('/applications') }}">View your applications</a>
-                                </div>
+                        <div class="d-flex">
+                            <button type="button" class="btn btn-outline-secondary me-2" onclick="shareJob()">
+                                <i class="bi bi-share me-1"></i> Share
+                            </button>
+                            @if(!$hasApplied)
+                                <a href="#apply-section" class="btn btn-primary">Apply Now</a>
                             @else
-                                <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#applyModal">
-                                    Apply Now
+                                <button class="btn btn-success" disabled>
+                                    <i class="bi bi-check2-circle me-1"></i> Applied
                                 </button>
                             @endif
-                        @elseif(Auth::user()->user_type == 'employer' && Auth::id() == $job->companyProfile->user_id)
-                            <div class="alert alert-info">
-                                This is your job posting.
-                                <a href="{{ url('/employer/jobs/'.$job->id.'/applications') }}">View Applications</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Form -->
+            @if(Auth::check() && Auth::user()->user_type == 'job_seeker')
+                <div id="apply-section">
+                    @if(!$hasApplied)
+                        @include('jobs.apply-form')
+                    @else
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body p-4 text-center">
+                                <div class="mb-3">
+                                    <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                                </div>
+                                <h4>You've Already Applied</h4>
+                                <p class="text-muted mb-4">You've already submitted an application for this position.</p>
+                                <a href="{{ route('applications.index') }}" class="btn btn-outline-primary">
+                                    View Your Application
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @elseif(Auth::check() && Auth::user()->user_type == 'employer')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-4 text-center">
+                        <h4>You're logged in as an employer</h4>
+                        <p class="text-muted mb-0">Switch to a job seeker account to apply for positions.</p>
+                    </div>
+                </div>
+            @else
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-4 text-center">
+                        <h4>Want to apply for this job?</h4>
+                        <p class="text-muted mb-4">You need to sign in to apply for this position.</p>
+                        <div>
+                            <a href="{{ route('login') }}" class="btn btn-primary me-2">Sign In</a>
+                            <a href="{{ route('register') }}" class="btn btn-outline-secondary">Create Account</a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Company Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">About the Company</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        @if($job->companyProfile->logo)
+                            <img src="{{ asset('storage/' . $job->companyProfile->logo) }}" alt="{{ $job->companyProfile->company_name }}" class="img-fluid mb-3" style="max-height: 100px;">
+                        @else
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                <span class="h3 mb-0 text-secondary">{{ substr($job->companyProfile->company_name, 0, 1) }}</span>
                             </div>
                         @endif
-                    @endguest
+                        <h5 class="card-title">{{ $job->companyProfile->company_name }}</h5>
+                        <p class="text-muted">{{ $job->companyProfile->industry }}</p>
+                    </div>
+
+                    <p class="card-text small">{{ Str::limit($job->companyProfile->description, 150) }}</p>
+
+                    <div class="d-grid">
+                        <a href="{{ route('companies.show', $job->companyProfile->id) }}" class="btn btn-outline-primary">
+                            View Company Profile
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="mb-4 card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0 card-title">Company Information</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3 text-center">
-                    @if($job->companyProfile->logo)
-                        <img src="{{ asset('storage/'.$job->companyProfile->logo) }}" alt="{{ $job->companyProfile->name }}" class="mb-3 img-fluid" style="max-height: 100px;">
-                    @endif
-                    <h5>{{ $job->companyProfile->name }}</h5>
+            <!-- Related Jobs -->
+            @if($relatedJobs->count() > 0)
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Similar Jobs</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach($relatedJobs as $relatedJob)
+                            <a href="{{ route('jobs.show', $relatedJob) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ $relatedJob->title }}</h6>
+                                </div>
+                                <p class="mb-1 small text-muted">{{ $relatedJob->companyProfile->company_name }}</p>
+                                <small>
+                                    <i class="bi bi-geo-alt"></i> {{ $relatedJob->location }} ·
+                                    <i class="bi bi-clock"></i> {{ ucfirst($relatedJob->type) }}
+                                </small>
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    <p>{{ $job->companyProfile->description }}</p>
-                </div>
-
-                @if($job->companyProfile->website)
-                <div class="mb-2">
-                    <strong>Website:</strong>
-                    <a href="{{ $job->companyProfile->website }}" target="_blank" rel="noopener noreferrer">
-                        {{ $job->companyProfile->website }}
-                    </a>
-                </div>
-                @endif
-
-                @if($job->companyProfile->location)
-                <div class="mb-2">
-                    <strong>Location:</strong> {{ $job->companyProfile->location }}
-                </div>
-                @endif
-
-                <div class="mt-3">
-                    <a href="{{ url('/companies/'.$job->companyProfile->id) }}" class="btn btn-outline-primary w-100">
-                        View All Jobs From This Company
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0 card-title">Job Details</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <strong>Posted:</strong> {{ $job->created_at->format('F d, Y') }}
-                </div>
-                <div class="mb-2">
-                    <strong>Job Type:</strong> {{ $job->type }}
-                </div>
-                <div class="mb-2">
-                    <strong>Category:</strong> {{ $job->category->name }}
-                </div>
-                <div class="mb-2">
-                    <strong>Location:</strong> {{ $job->location }}
-                </div>
-                @if($job->salary)
-                <div class="mb-2">
-                    <strong>Salary:</strong> ${{ number_format($job->salary) }}
-                </div>
-                @endif
-            </div>
+            @endif
         </div>
     </div>
 </div>
 
-<!-- Apply Modal -->
-<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="applyModalLabel">Apply for {{ $job->title }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ url('/jobs/'.$job->id.'/apply') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="mb-3">
-                        <label for="cover_letter" class="form-label">Cover Letter</label>
-                        <textarea name="cover_letter" id="cover_letter" rows="5" class="form-control" required></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="resume" class="form-label">Resume (PDF only)</label>
-                        <input type="file" name="resume" id="resume" class="form-control" accept=".pdf" required>
-                    </div>
-
-                    <div class="text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Submit Application</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+@push('scripts')
+<script>
+    function shareJob() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ $job->title }} - {{ $job->companyProfile->company_name }}',
+                text: 'Check out this job opportunity: {{ $job->title }} at {{ $job->companyProfile->company_name }}',
+                url: window.location.href,
+            });
+        } else {
+            // Copy to clipboard as fallback
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => alert('Link copied to clipboard!'))
+                .catch(err => console.error('Could not copy text: ', err));
+        }
+    }
+</script>
+@endpush
 @endsection

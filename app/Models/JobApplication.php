@@ -12,18 +12,18 @@ class JobApplication extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $fillable = [
-        'job_id',
         'user_id',
+        'job_id',
         'cover_letter',
-        'resume',
+        'resume_path',
         'status',
     ];
 
     /**
-     * Get the job that owns the application.
+     * Get the job that this application belongs to.
      */
     public function job()
     {
@@ -31,7 +31,7 @@ class JobApplication extends Model
     }
 
     /**
-     * Get the user that owns the application.
+     * Get the user (applicant) that owns this application.
      */
     public function user()
     {

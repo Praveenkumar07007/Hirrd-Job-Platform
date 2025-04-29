@@ -12,18 +12,18 @@ class Job extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $fillable = [
         'title',
         'description',
-        'company_id',
-        'category_id',
+        'requirements',
         'location',
+        'salary_range',
         'type',
-        'salary',
-        'deadline',
-        'is_active',
+        'status',
+        'company_profile_id',
+        'category_id',
     ];
 
     /**
@@ -38,15 +38,16 @@ class Job extends Model
     ];
 
     /**
-     * Get the company that owns the job.
+     * Get the company profile that owns the job.
      */
     public function companyProfile()
     {
+        // Specify the correct foreign key name
         return $this->belongsTo(CompanyProfile::class, 'company_id');
     }
 
     /**
-     * Get the category for the job.
+     * Get the category for this job.
      */
     public function category()
     {
@@ -54,7 +55,7 @@ class Job extends Model
     }
 
     /**
-     * Get the applications for the job.
+     * Get the applications for this job.
      */
     public function applications()
     {

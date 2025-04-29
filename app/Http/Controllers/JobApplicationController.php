@@ -52,4 +52,24 @@ class JobApplicationController extends Controller
 
         return view('applications.show', compact('application'));
     }
+
+    /**
+     * Update the status of an application (for employers only)
+     */
+    public function updateStatus(Request $request, JobApplication $application)
+    {
+        // Verify user is authorized to update this application
+        if (Auth::user()->user_type !== 'employer' || $application->job->companyProfile->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'status' => 'required|in:pending,interviewing,approved,rejected'
+        ]);
+
+        $application->status = $request->status;
+        $application->save();
+
+        return redirect()->back()->with('success', 'Application status updated successfully');
+    }
 }

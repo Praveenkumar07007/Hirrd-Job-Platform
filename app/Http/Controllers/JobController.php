@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Job;
-use App\Models\JobCategory;
 use App\Models\JobApplication;
+use App\Models\JobCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -12,101 +12,142 @@ use Illuminate\Support\Facades\Storage;
 class JobController extends Controller
 {
     /**
-     * Display a listing of the jobs.
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->middleware('auth')->only(['apply']);
+    }
+
+    /**
+     * Display a listing of jobs
      */
     public function index(Request $request)
     {
-        $query = Job::query()->where('is_active', true);
+        $query = Job::with(['companyProfile', 'category'])
+            ->where('status', 'active');
 
-        // Filter by keyword
-        if ($request->has('keyword') && !empty($request->keyword)) {
+        // Filter by keyword (title, description, company)
+        if ($request->filled('keyword')) {
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                    ->orWhere('description', 'like', "%{$keyword}%")
-                    ->orWhere('location', 'like', "%{$keyword}%");
+                $q->where('title', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%')
+                    ->orWhereHas('companyProfile', function ($q) use ($keyword) {
+                        $q->where('company_name', 'like', '%' . $keyword . '%');
+                    });
             });
         }
 
+        // Filter by location
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%' . $request->location . '%');
+        }
+
         // Filter by category
-        if ($request->has('category') && !empty($request->category)) {
+        if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
 
-        // Filter by type
-        if ($request->has('type') && !empty($request->type)) {
+        // Filter by job type
+        if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        // Filter by location
-        if ($request->has('location') && !empty($request->location)) {
-            $query->where('location', 'like', "%{$request->location}%");
+        // Sort results
+        if ($request->sort == 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest(); // default - newest first
         }
 
-        $jobs = $query->with(['companyProfile', 'category'])
-            ->latest()
-            ->paginate(10);
+        $jobs = $query->paginate(10)->withQueryString();
 
+        // Get data for filters
         $categories = JobCategory::all();
+        $jobTypes = ['full-time', 'part-time', 'contract', 'internship', 'remote'];
 
-        return view('jobs.index', compact('jobs', 'categories'));
+        return view('jobs.index', compact('jobs', 'categories', 'jobTypes'));
     }
 
     /**
-     * Display the specified job.
+     * Display the specified job
      */
     public function show(Job $job)
     {
+        // Check if job is active
+        if ($job->status != 'active' && !(Auth::check() && Auth::id() == $job->companyProfile->user_id)) {
+            abort(404);
+        }
+
         $job->load(['companyProfile', 'category']);
 
+        // Check if the user has applied for this job
         $hasApplied = false;
-
-        if (Auth::check() && Auth::user()->user_type == 'job_seeker') {
-            $hasApplied = JobApplication::where('job_id', $job->id)
-                ->where('user_id', Auth::id())
+        if (Auth::check()) {
+            $hasApplied = JobApplication::where('user_id', Auth::id())
+                ->where('job_id', $job->id)
                 ->exists();
         }
 
-        return view('jobs.show', compact('job', 'hasApplied'));
+        // Get related jobs
+        $relatedJobs = Job::where('status', 'active')
+            ->where('id', '!=', $job->id)
+            ->where(function ($query) use ($job) {
+                $query->where('category_id', $job->category_id)
+                    ->orWhere('company_profile_id', $job->company_profile_id);
+            })
+            ->take(3)
+            ->get();
+
+        return view('jobs.show', compact('job', 'hasApplied', 'relatedJobs'));
     }
 
     /**
-     * Apply for a job.
+     * Apply for a job
      */
     public function apply(Request $request, Job $job)
     {
-        // Validate user is a job seeker and logged in
-        if (!Auth::check() || Auth::user()->user_type != 'job_seeker') {
-            return redirect()->route('login');
+        // Ensure user is a job seeker
+        if (Auth::user()->user_type != 'job_seeker') {
+            return redirect()->back()->with('error', 'Only job seekers can apply for jobs');
+        }
+
+        // Check if job is still active
+        if ($job->status != 'active') {
+            return redirect()->back()->with('error', 'This job is no longer accepting applications');
         }
 
         // Check if already applied
-        $hasApplied = JobApplication::where('job_id', $job->id)
-            ->where('user_id', Auth::id())
+        $hasApplied = JobApplication::where('user_id', Auth::id())
+            ->where('job_id', $job->id)
             ->exists();
 
         if ($hasApplied) {
-            return redirect()->back()->with('error', 'You have already applied for this job.');
+            return redirect()->back()->with('error', 'You have already applied for this position');
         }
 
-        // Validate form data
-        $validated = $request->validate([
-            'cover_letter' => 'required|string',
-            'resume' => 'required|file|mimes:pdf|max:2048',
+        // Validate the application
+        $request->validate([
+            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'cover_letter' => 'required|string'
         ]);
 
-        // Store resume file
-        $resumePath = $request->file('resume')->store('resumes', 'public');
+        // Handle resume upload
+        $resumePath = null;
+        if ($request->hasFile('resume')) {
+            $resumePath = $request->file('resume')->store('resumes', 'public');
+        }
 
-        // Create job application
-        JobApplication::create([
-            'job_id' => $job->id,
-            'user_id' => Auth::id(),
-            'cover_letter' => $validated['cover_letter'],
-            'resume' => $resumePath,
-            'status' => 'pending',
-        ]);
+        // Create the application
+        $application = new JobApplication();
+        $application->user_id = Auth::id();
+        $application->job_id = $job->id;
+        $application->cover_letter = $request->cover_letter;
+        $application->resume_path = $resumePath;
+        $application->status = 'pending';
+        $application->save();
 
-        return redirect()->route('applications.index')->with('success', 'Your application has been submitted successfully!');
+        return redirect()->route('jobs.show', $job)->with('success', 'Application submitted successfully!');
     }
 }

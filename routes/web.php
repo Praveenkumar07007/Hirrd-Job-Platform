@@ -22,41 +22,46 @@ use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationCo
 |--------------------------------------------------------------------------
 |
 | Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group.
 |
 */
 
-// Public routes
+// Landing & Home Page
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
-Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show');
 
-// Companies routes (public)
-Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
-Route::get('/companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
-
-// Authentication routes
+// Authentication routes (Laravel's default auth routes)
 Auth::routes();
+
+// Job Routes
+Route::prefix('jobs')->group(function () {
+    Route::get('/', [JobController::class, 'index'])->name('jobs.index');
+    Route::get('/{job}', [JobController::class, 'show'])->name('jobs.show');
+    Route::post('/{job}/apply', [JobController::class, 'apply'])->name('jobs.apply');
+});
+
+// Company Routes
+Route::prefix('companies')->group(function () {
+    Route::get('/', [CompanyController::class, 'index'])->name('companies.index');
+    Route::get('/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/', [CompanyController::class, 'store'])->name('companies.store');
+    Route::get('/edit', [CompanyController::class, 'edit'])->name('companies.edit');
+    Route::put('/', [CompanyController::class, 'update'])->name('companies.update');
+    Route::get('/{company}', [CompanyController::class, 'show'])->name('companies.show');
+});
+
+// Job Applications Routes
+Route::prefix('applications')->group(function () {
+    Route::get('/', [JobApplicationController::class, 'index'])->name('applications.index');
+    Route::get('/{application}', [JobApplicationController::class, 'show'])->name('applications.show');
+    Route::patch('/{application}/status', [JobApplicationController::class, 'updateStatus'])->name('applications.update-status');
+});
 
 // Protected routes for all authenticated users
 Route::middleware(['auth'])->group(function () {
-    // Job application routes
-    Route::post('/jobs/{job}/apply', [JobController::class, 'apply'])->name('jobs.apply');
-
     // Job seeker routes
-    Route::get('/applications', [JobApplicationController::class, 'index'])->name('applications.index');
-    Route::get('/applications/{application}', [JobApplicationController::class, 'show'])->name('applications.show');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-    // Company management for employers
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/company/create', [CompanyController::class, 'create'])->name('companies.create');
-        Route::post('/company', [CompanyController::class, 'store'])->name('companies.store');
-        Route::get('/company/edit', [CompanyController::class, 'edit'])->name('companies.edit');
-        Route::put('/company', [CompanyController::class, 'update'])->name('companies.update');
-    });
 
     // Employer routes
     Route::prefix('employer')->name('employer.')->group(function () {
@@ -91,7 +96,3 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('companies', AdminCompanyController::class);
     });
 });
-
-Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

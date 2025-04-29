@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompanyProfile;
+use App\Models\Job;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,13 +20,31 @@ class CompanyController extends Controller
     /**
      * Display a listing of companies
      */
-    public function index()
+    public function index(Request $request)
     {
-        $companies = CompanyProfile::with('user')
-            ->latest()
-            ->paginate(10);
+        $query = CompanyProfile::query();
 
-        return view('companies.index', compact('companies'));
+        // Filter by name/industry
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('company_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('industry', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        // Filter by industry
+        if ($request->filled('industry')) {
+            $query->where('industry', $request->industry);
+        }
+
+        $companies = $query->paginate(12)->withQueryString();
+
+        // Get list of unique industries for filter
+        $industries = CompanyProfile::distinct()->pluck('industry')->filter()->sort();
+
+        return view('companies.index', compact('companies', 'industries'));
     }
 
     /**
@@ -33,12 +52,13 @@ class CompanyController extends Controller
      */
     public function show(CompanyProfile $company)
     {
-        $company->load(['jobs' => function ($query) {
-            $query->where('status', 'active')
-                ->latest();
-        }]);
+        // Get active jobs for this company
+        $jobs = Job::where('company_profile_id', $company->id)
+            ->where('status', 'active')
+            ->latest()
+            ->get();
 
-        return view('companies.show', compact('company'));
+        return view('companies.show', compact('company', 'jobs'));
     }
 
     /**

@@ -49,6 +49,13 @@
                             <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                 {{ __('Profile') }}
                             </a>
+
+                            @if(Auth::user()->user_type == 'job_seeker')
+                                <a class="dropdown-item" href="{{ route('applications.index') }}">
+                                    {{ __('My Applications') }}
+                                </a>
+                            @endif
+
                             {{-- Add links for employer/admin dashboards here if needed later --}}
 
                             <a class="dropdown-item" href="{{ route('logout') }}"

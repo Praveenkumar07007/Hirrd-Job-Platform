@@ -92,11 +92,11 @@ class JobController extends Controller
         }
 
         // Get related jobs
-        $relatedJobs = Job::where('is_active', true) // Changed status to is_active
+        $relatedJobs = Job::where('is_active', true)
             ->where('id', '!=', $job->id)
             ->where(function ($query) use ($job) {
                 $query->where('category_id', $job->category_id)
-                    ->orWhere('company_profile_id', $job->company_profile_id);
+                    ->orWhere('company_id', $job->company_id);
             })
             ->take(3)
             ->get();
@@ -109,46 +109,79 @@ class JobController extends Controller
      */
     public function apply(Request $request, Job $job)
     {
-        // Ensure user is a job seeker
-        if (Auth::user()->user_type != 'job_seeker') {
-            return redirect()->back()->with('error', 'Only job seekers can apply for jobs');
+        try {
+            // Ensure user is a job seeker
+            if (Auth::user()->user_type != 'job_seeker') {
+                return redirect()->back()->with('error', 'Only job seekers can apply for jobs');
+            }
+
+            // Check if job is still active
+            if (!$job->is_active) {
+                return redirect()->back()->with('error', 'This job is no longer accepting applications');
+            }
+
+            // Check if already applied
+            $hasApplied = JobApplication::where('user_id', Auth::id())
+                ->where('job_id', $job->id)
+                ->exists();
+
+            if ($hasApplied) {
+                return redirect()->back()->with('error', 'You have already applied for this position');
+            }
+
+            // Validate the application
+            $request->validate([
+                'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+                'cover_letter' => 'required|string'
+            ]);
+
+            // Create the application first without resume
+            $application = new JobApplication();
+            $application->user_id = Auth::id();
+            $application->job_id = $job->id;
+            $application->cover_letter = $request->cover_letter;
+            $application->status = 'pending';
+
+            // Try to save without file first
+            $application->save();
+
+            // Now try to handle the file upload separately
+            if ($request->hasFile('resume')) {
+                try {
+                    // Check if the storage directory exists, if not create it
+                    $storageDir = storage_path('app/public/resumes');
+                    if (!file_exists($storageDir)) {
+                        mkdir($storageDir, 0755, true);
+                    }
+
+                    $resumePath = $request->file('resume')->store('resumes', 'public');
+
+                    // Update the application with the resume path
+                    // Use 'resume' field instead of 'resume_path' to match the database column
+                    if ($resumePath) {
+                        $application->resume = $resumePath;
+                        $application->save();
+                    }
+                } catch (\Exception $fileEx) {
+                    // Log file upload error but continue with the application
+                    \Log::error('File upload error: ' . $fileEx->getMessage());
+                }
+            }
+
+            return redirect()->route('jobs.show', $job)->with('success', 'Thank you for your application! We have received your submission and will be in touch soon.');
+        } catch (\Exception $e) {
+            // Log detailed error information
+            \Log::error('Application error: ' . $e->getMessage());
+            \Log::error('Error trace: ' . $e->getTraceAsString());
+
+            // Return with a more specific error message if possible
+            $errorMessage = 'There was a problem submitting your application. Please try again.';
+
+            if (app()->environment('local')) {
+                $errorMessage .= ' Error: ' . $e->getMessage();
+            }
+
+            return redirect()->back()->with('error', $errorMessage);
         }
-
-        // Check if job is still active
-        if (!$job->is_active) { // Changed status to is_active
-            return redirect()->back()->with('error', 'This job is no longer accepting applications');
-        }
-
-        // Check if already applied
-        $hasApplied = JobApplication::where('user_id', Auth::id())
-            ->where('job_id', $job->id)
-            ->exists();
-
-        if ($hasApplied) {
-            return redirect()->back()->with('error', 'You have already applied for this position');
-        }
-
-        // Validate the application
-        $request->validate([
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
-            'cover_letter' => 'required|string'
-        ]);
-
-        // Handle resume upload
-        $resumePath = null;
-        if ($request->hasFile('resume')) {
-            $resumePath = $request->file('resume')->store('resumes', 'public');
-        }
-
-        // Create the application
-        $application = new JobApplication();
-        $application->user_id = Auth::id();
-        $application->job_id = $job->id;
-        $application->cover_letter = $request->cover_letter;
-        $application->resume_path = $resumePath;
-        $application->status = 'pending';
-        $application->save();
-
-        return redirect()->route('jobs.show', $job)->with('success', 'Application submitted successfully!');
     }
 }

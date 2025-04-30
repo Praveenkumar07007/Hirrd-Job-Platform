@@ -5,14 +5,30 @@
 @section('content')
 <div class="container">
     @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+        <div class="alert alert-success shadow-sm mb-4">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi bi-check-circle-fill fs-3"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1">Application Submitted!</h5>
+                    {{ session('success') }}
+                </div>
+            </div>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
+        <div class="alert alert-danger shadow-sm mb-4">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi bi-exclamation-circle-fill fs-3"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1">Error</h5>
+                    {{ session('error') }}
+                </div>
+            </div>
         </div>
     @endif
 
@@ -37,16 +53,13 @@
         <div class="col-lg-8">
             <!-- Job Details -->
             <div class="card shadow-sm mb-4">
+                <!-- Job Image Banner -->
+                <img src="{{ $job->job_image_url }}" class="card-img-top" alt="{{ $job->title }} image" style="height: 200px; object-fit: cover;">
+
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-4">
                         <div class="flex-shrink-0 me-3">
-                            @if($job->companyProfile->logo)
-                                <img src="{{ asset('storage/' . $job->companyProfile->logo) }}" alt="{{ $job->companyProfile->company_name }}" class="rounded" width="80">
-                            @else
-                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                    <span class="h3 mb-0 text-secondary">{{ substr($job->companyProfile->company_name, 0, 1) }}</span>
-                                </div>
-                            @endif
+                            <img src="{{ $job->companyProfile->company_logo_url }}" alt="{{ $job->companyProfile->company_name }}" class="rounded" width="80" height="80" style="object-fit: cover;">
                         </div>
 
                         <div>
@@ -156,13 +169,7 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="text-center mb-4">
-                        @if($job->companyProfile->logo)
-                            <img src="{{ asset('storage/' . $job->companyProfile->logo) }}" alt="{{ $job->companyProfile->company_name }}" class="img-fluid mb-3" style="max-height: 100px;">
-                        @else
-                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
-                                <span class="h3 mb-0 text-secondary">{{ substr($job->companyProfile->company_name, 0, 1) }}</span>
-                            </div>
-                        @endif
+                        <img src="{{ $job->companyProfile->company_logo_url }}" alt="{{ $job->companyProfile->company_name }}" class="img-fluid mb-3" style="max-height: 100px;">
                         <h5 class="card-title">{{ $job->companyProfile->company_name }}</h5>
                         <p class="text-muted">{{ $job->companyProfile->industry }}</p>
                     </div>

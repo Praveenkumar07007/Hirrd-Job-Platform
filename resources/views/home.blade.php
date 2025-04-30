@@ -105,19 +105,18 @@
                                         <i class="bi bi-star-fill text-warning"></i>
                                     </div>
                                     <blockquote class="mb-4 blockquote">
-                                        <p class="fst-italic">"This platform made finding my dream job incredibly easy. The interface is clean and the job listings are relevant and up-to-date."</p>
+                                        <p class="fst-italic">"Hirrd's intelligent matching algorithm helped me find a position that perfectly aligns with my technical skills and career goals. Within three weeks of signing up, I received multiple interview requests from quality employers."</p>
                                     </blockquote>
                                     <div class="d-flex align-items-center">
-                                        <img src="https://randomuser.me/api/portraits/women/12.jpg" alt="Jane Doe" class="rounded-circle me-3" width="50" height="50">
+                                        <img src="https://randomuser.me/api/portraits/women/12.jpg" alt="Sarah Chen" class="rounded-circle me-3" width="50" height="50">
                                         <div>
-                                            <h6 class="mb-0">Jane Doe</h6>
-                                            <small class="text-muted">Software Engineer</small>
+                                            <h6 class="mb-0">Sarah Chen</h6>
+                                            <small class="text-muted">Senior Frontend Developer at CloudTech</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                         <div class="mb-4 col-md-6">
                             <div class="border-0 shadow-sm card h-100">
                                 <div class="p-4 card-body">
@@ -129,13 +128,13 @@
                                         <i class="bi bi-star-fill text-warning"></i>
                                     </div>
                                     <blockquote class="mb-4 blockquote">
-                                        <p class="fst-italic">"As an employer, posting jobs and managing applications is straightforward. We found great candidates quickly."</p>
+                                        <p class="fst-italic">"As a hiring manager, Hirrd has transformed our recruitment process. The quality of candidates is consistently high, and the platform's analytics help us refine our job listings for better results. Our time-to-hire has decreased by 35%."</p>
                                     </blockquote>
                                     <div class="d-flex align-items-center">
-                                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="John Smith" class="rounded-circle me-3" width="50" height="50">
+                                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Michael Nolan" class="rounded-circle me-3" width="50" height="50">
                                         <div>
-                                            <h6 class="mb-0">John Smith</h6>
-                                            <small class="text-muted">HR Manager at TechCorp</small>
+                                            <h6 class="mb-0">Michael Nolan</h6>
+                                            <small class="text-muted">Director of Talent Acquisition at Nexus Systems</small>
                                         </div>
                                     </div>
                                 </div>

@@ -55,18 +55,18 @@
             <div class="px-6 py-16 mx-auto max-w-7xl lg:px-8">
                 <div class="mb-16 text-center">
                     <h1 class="mb-6 text-4xl font-bold lg:text-6xl dark:text-white">
-                        Transform Your Hiring Process
+                        Transform Your Talent Acquisition
                     </h1>
                     <p class="text-xl lg:text-2xl text-[#706f6c] dark:text-[#A1A09A] mb-8 max-w-3xl mx-auto">
-                        Connect with top talent and streamline your recruitment workflow with AI-powered matching.
+                        Connect with exceptional candidates and optimize your recruitment process with our AI-powered matching technology and data-driven insights.
                     </p>
 
                     <div class="flex flex-col justify-center gap-4 mb-12 sm:flex-row">
                         <a href="{{ route('register') }}" class="btn-primary-lg">
-                            Get Started Free
+                            Get Started Today
                         </a>
                         <a href="#features" class="btn-secondary-lg">
-                            Learn More
+                            Explore Features
                         </a>
                     </div>
                 </div>

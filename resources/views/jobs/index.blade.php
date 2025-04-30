@@ -186,16 +186,16 @@
                                                     <img src="https://via.placeholder.com/40" alt="Company" class="img-fluid" style="width: 40px; height: 40px;">
                                                 </div>
                                                 <div>
-                                                    <h5 class="mb-0 card-title">Software Developer</h5>
-                                                    <p class="mb-0 text-muted small">TechCorp Inc.</p>
+                                                    <h5 class="mb-0 card-title">Full Stack Developer</h5>
+                                                    <p class="mb-0 text-muted small">Innovate Solutions Inc.</p>
                                                 </div>
                                             </div>
                                             <div class="flex-wrap gap-2 mb-3 d-flex small">
                                                 <span class="badge bg-light text-dark">San Francisco, CA</span>
                                                 <span class="badge bg-light text-dark">Full-time</span>
-                                                <span class="badge bg-light text-dark">$80k - $120k</span>
+                                                <span class="badge bg-light text-dark">$90k - $130k</span>
                                             </div>
-                                            <p class="card-text small">Developing and maintaining web applications using modern frameworks and best practices.</p>
+                                            <p class="card-text small">Join our engineering team to build scalable web applications using React, Node.js, and cloud infrastructure. Position requires 3+ years of experience.</p>
                                             <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
                                         </div>
                                     </div>
@@ -210,16 +210,16 @@
                                                     <img src="https://via.placeholder.com/40" alt="Company" class="img-fluid" style="width: 40px; height: 40px;">
                                                 </div>
                                                 <div>
-                                                    <h5 class="mb-0 card-title">Marketing Specialist</h5>
-                                                    <p class="mb-0 text-muted small">Growth Media Ltd.</p>
+                                                    <h5 class="mb-0 card-title">Digital Marketing Manager</h5>
+                                                    <p class="mb-0 text-muted small">Amplify Digital Group</p>
                                                 </div>
                                             </div>
                                             <div class="flex-wrap gap-2 mb-3 d-flex small">
                                                 <span class="badge bg-light text-dark">Remote</span>
                                                 <span class="badge bg-light text-dark">Full-time</span>
-                                                <span class="badge bg-light text-dark">$70k - $90k</span>
+                                                <span class="badge bg-light text-dark">$75k - $95k</span>
                                             </div>
-                                            <p class="card-text small">Creating and implementing marketing campaigns for our clients across multiple digital platforms.</p>
+                                            <p class="card-text small">Lead strategic marketing initiatives across digital channels. Seeking professional with experience in SEO/SEM, social media marketing, and analytics.</p>
                                             <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
                                         </div>
                                     </div>
